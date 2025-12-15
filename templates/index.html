@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Actionable Insight Overview</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Actionable Insight Overview</h1>
+
+      <!-- User Filter -->
+      <div class="filter-container">
+        <label for="user-filter-btn" class="filter-label"
+          >Filter by User:</label
+        >
+        <button id="user-filter-btn" class="filter-button">
+          <span id="selected-count">All Users</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+
+        <div
+          id="user-filter-dropdown"
+          class="filter-dropdown"
+          style="display: none">
+          <div class="filter-search">
+            <input type="text" id="user-search" placeholder="Search users..." />
+          </div>
+          <div class="filter-actions">
+            <button id="select-all-btn" class="action-btn">Select All</button>
+            <button id="clear-all-btn" class="action-btn">Clear All</button>
+          </div>
+          <div class="filter-options" id="user-options">
+            {% for user in all_users %}
+            <label class="filter-option">
+              <input
+                type="checkbox"
+                class="user-checkbox"
+                value="{{ user }}"
+                checked />
+              <span>{{ user }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="filter-footer">
+            <button id="apply-filter-btn" class="apply-btn">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pivot-table-container">
+        <table class="pivot-table">
+          <thead>
+            <tr>
+              <th class="action-header">Action Type</th>
+              {% for phase in phase_order %}
+              <th class="phase-header">{{ phase }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for action in all_actions %}
+            <tr>
+              <td class="action-cell">{{ action }}</td>
+              {% for phase in phase_order %}
+              <td class="pivot-cell">
+                {% if pivot_data[action][phase] %} {% for issue in
+                pivot_data[action][phase] %}
+                <div
+                  class="issue-item"
+                  onclick="showFindings('{{ action|escape }}', '{{ issue.Issue|escape }}')">
+                  <span class="issue-text">{{ issue.Issue_Clean }}</span>
+                  <span class="issue-badge">{{ issue.Finding_Count }}</span>
+                </div>
+                {% endfor %} {% else %}
+                <span class="empty-cell">—</span>
+                {% endif %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal hiển thị Finding Detail -->
+    <div id="finding-modal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3 id="modal-issue-title"></h3>
+        <div class="table-container">
+          <table id="modal-finding-table">
+            <thead>
+              <tr>
+                <th>Finding</th>
+                <th>User</th>
+                <th>Phase</th>
+                <th>Issue Explanation</th>
+                <th>Action Explanation</th>
+                <th>Action Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Nội dung sẽ được thêm bằng JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let detailMap = {{ detail_map|tojson }};
+      let pivotData = {{ pivot_data|tojson }};
+      let phaseOrder = {{ phase_order|tojson }};
+      let allActions = {{ all_actions|tojson }};
+      let selectedUsers = new Set({{ all_users|tojson }});
+
+      // Filter dropdown toggle
+      document.getElementById('user-filter-btn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const dropdown = document.getElementById('user-filter-dropdown');
+          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+          const dropdown = document.getElementById('user-filter-dropdown');
+          const button = document.getElementById('user-filter-btn');
+          if (!dropdown.contains(e.target) && e.target !== button) {
+              dropdown.style.display = 'none';
+          }
+      });
+
+      // Prevent dropdown close when clicking inside
+      document.getElementById('user-filter-dropdown').addEventListener('click', function(e) {
+          e.stopPropagation();
+      });
+
+      // Search functionality
+      document.getElementById('user-search').addEventListener('input', function(e) {
+          const searchTerm = e.target.value.toLowerCase();
+          const options = document.querySelectorAll('.filter-option');
+          options.forEach(option => {
+              const text = option.textContent.toLowerCase();
+              option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+          });
+      });
+
+      // Select All
+      document.getElementById('select-all-btn').addEventListener('click', function() {
+          document.querySelectorAll('.user-checkbox').forEach(cb => {
+              if (cb.parentElement.style.display !== 'none') {
+                  cb.checked = true;
+              }
+          });
+      });
+
+      // Clear All
+      document.getElementById('clear-all-btn').addEventListener('click', function() {
+          document.querySelectorAll('.user-checkbox').forEach(cb => {
+              if (cb.parentElement.style.display !== 'none') {
+                  cb.checked = false;
+              }
+          });
+      });
+
+      // Apply Filter
+      document.getElementById('apply-filter-btn').addEventListener('click', function() {
+          selectedUsers.clear();
+          document.querySelectorAll('.user-checkbox:checked').forEach(cb => {
+              selectedUsers.add(cb.value);
+          });
+          updateSelectedCount();
+          applyFilter();
+          document.getElementById('user-filter-dropdown').style.display = 'none';
+      });
+
+      function updateSelectedCount() {
+          const count = selectedUsers.size;
+          const total = {{ all_users|length }};
+          const label = count === total ? 'All Users' : `${count} of ${total} selected`;
+          document.getElementById('selected-count').textContent = label;
+      }
+
+      async function applyFilter() {
+          const users = Array.from(selectedUsers);
+          const allUsersList = {{ all_users|tojson }};
+
+          // If all users are selected, pass empty array to show all data
+          const usersToSend = users.length === allUsersList.length ? [] : users;
+
+          try {
+              const response = await fetch('/api/filter', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ users: usersToSend })
+              });
+
+              const data = await response.json();
+              pivotData = data.pivot_data;
+              phaseOrder = data.phase_order;
+              allActions = data.all_actions;
+              detailMap = data.detail_map;
+
+              rebuildTable();
+          } catch (error) {
+              console.error('Error filtering data:', error);
+          }
+      }
+
+      function rebuildTable() {
+          const tbody = document.querySelector('.pivot-table tbody');
+          tbody.innerHTML = '';
+
+          allActions.forEach(action => {
+              const tr = document.createElement('tr');
+
+              // Action cell
+              const actionCell = document.createElement('td');
+              actionCell.className = 'action-cell';
+              actionCell.textContent = action;
+              tr.appendChild(actionCell);
+
+              // Phase cells
+              phaseOrder.forEach(phase => {
+                  const phaseCell = document.createElement('td');
+                  phaseCell.className = 'pivot-cell';
+
+                  const issues = pivotData[action][phase] || [];
+
+                  if (issues.length > 0) {
+                      issues.forEach(issue => {
+                          const issueDiv = document.createElement('div');
+                          issueDiv.className = 'issue-item';
+                          issueDiv.onclick = () => showFindings(action, issue.Issue);
+
+                          const issueText = document.createElement('span');
+                          issueText.className = 'issue-text';
+                          issueText.textContent = issue.Issue_Clean;
+
+                          const issueBadge = document.createElement('span');
+                          issueBadge.className = 'issue-badge';
+                          issueBadge.textContent = issue.Finding_Count;
+
+                          issueDiv.appendChild(issueText);
+                          issueDiv.appendChild(issueBadge);
+                          phaseCell.appendChild(issueDiv);
+                      });
+                  } else {
+                      const emptySpan = document.createElement('span');
+                      emptySpan.className = 'empty-cell';
+                      emptySpan.textContent = '—';
+                      phaseCell.appendChild(emptySpan);
+                  }
+
+                  tr.appendChild(phaseCell);
+              });
+
+              tbody.appendChild(tr);
+          });
+      }
+
+      function showFindings(action, issue) {
+          const key = action + '|||' + issue;
+          let details = detailMap[key] || [];
+
+          // Filter by selected users
+          if (selectedUsers.size > 0) {
+              details = details.filter(obj => selectedUsers.has(obj.user));
+          }
+
+          document.getElementById('modal-issue-title').innerText = action + ' → ' + issue;
+          const tbody = document.getElementById('modal-finding-table').querySelector('tbody');
+          tbody.innerHTML = '';
+
+          details.forEach(obj => {
+              const tr = document.createElement('tr');
+
+              const tdFinding = document.createElement('td');
+              tdFinding.innerText = obj.finding || '';
+
+              const tdUser = document.createElement('td');
+              tdUser.innerText = obj.user || '';
+
+              const tdPhase = document.createElement('td');
+              tdPhase.innerText = obj.phase || '';
+
+              const tdIssueExplanation = document.createElement('td');
+              tdIssueExplanation.innerText = obj.issue_explanation || '';
+
+              const tdActionExplanation = document.createElement('td');
+              tdActionExplanation.innerText = obj.action_explanation || '';
+
+              const tdConfidence = document.createElement('td');
+              tdConfidence.innerText = obj.action_confidence || '';
+
+              tr.appendChild(tdFinding);
+              tr.appendChild(tdUser);
+              tr.appendChild(tdPhase);
+              tr.appendChild(tdIssueExplanation);
+              tr.appendChild(tdActionExplanation);
+              tr.appendChild(tdConfidence);
+              tbody.appendChild(tr);
+          });
+
+          document.getElementById('finding-modal').style.display = 'flex';
+      }
+
+      function closeModal() {
+          document.getElementById('finding-modal').style.display = 'none';
+      }
+    </script>
+    <style>
+      .modal {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .modal-content {
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        min-width: 400px;
+        max-width: 700px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        max-height: 80vh;
+        overflow: auto;
+      }
+      .table-container {
+        max-height: 55vh;
+        overflow-y: auto;
+        margin-top: 20px;
+      }
+      #modal-finding-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      #modal-finding-table th,
+      #modal-finding-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      #modal-finding-table th {
+        background: #f2f2f2;
+        position: sticky;
+        top: 0;
+      }
+      .close {
+        float: right;
+        font-size: 2em;
+        cursor: pointer;
+        margin-top: -10px;
+      }
+    </style>
+  </body>
+</html>

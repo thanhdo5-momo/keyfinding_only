@@ -1,0 +1,355 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 95%;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+}
+
+.filter-container {
+    margin-bottom: 25px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.filter-button {
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 200px;
+    justify-content: space-between;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.filter-button:hover {
+    background: #f8f9fa;
+    border-color: #5568d3;
+}
+
+.filter-arrow {
+    color: #667eea;
+    font-size: 0.8em;
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 135px;
+    margin-top: 5px;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 300px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-search {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.filter-search input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.filter-search input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.filter-actions {
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.filter-options {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.filter-option:hover {
+    background: #f8f9fa;
+}
+
+.filter-option input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.filter-footer {
+    padding: 12px;
+    border-top: 1px solid #dee2e6;
+}
+
+.apply-btn {
+    width: 100%;
+    padding: 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: background 0.2s;
+}
+
+.apply-btn:hover {
+    background: #5568d3;
+}
+
+.pivot-table-container {
+    overflow-x: auto;
+}
+
+.pivot-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.pivot-table thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.action-header {
+    background: #667eea;
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    border: 2px solid #5568d3;
+    min-width: 200px;
+}
+
+.phase-header {
+    background: #764ba2;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: 600;
+    border: 2px solid #6a4291;
+    min-width: 250px;
+}
+
+.action-cell {
+    background: #f8f9fa;
+    padding: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.pivot-cell {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+    min-height: 60px;
+}
+
+.issue-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.issue-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateX(3px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.issue-item:hover .issue-badge {
+    background: white;
+    color: #667eea;
+}
+
+.issue-text {
+    flex: 1;
+    font-size: 0.9em;
+}
+
+.issue-badge {
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+}
+
+.empty-cell {
+    color: #adb5bd;
+    text-align: center;
+    display: block;
+    padding: 20px;
+}
+
+.modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    min-width: 1800px;   /* Kéo rộng modal detail hơn nữa */
+    max-width: 99vw;
+    max-height: 90vh;
+    overflow: auto;
+}
+
+.close {
+    float: right;
+    font-size: 2em;
+    cursor: pointer;
+    margin-top: -10px;
+    color: #999;
+}
+
+.close:hover {
+    color: #333;
+}
+
+#modal-issue-title {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.table-container {
+    max-height: 55vh;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+#modal-finding-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#modal-finding-table th,
+#modal-finding-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+#modal-finding-table th {
+    background: #f2f2f2;   /* Header background màu xám nhạt */
+    color: #222;           /* Chữ header màu đen */
+    position: sticky;
+    top: 0;
+    font-weight: 600;
+}
+
+#modal-finding-table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+#modal-finding-table tr:hover {
+    background: #e9ecef;
+}
+
+@media (max-width: 768px) {
+    .phases-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        min-width: 90vw;
+    }
+}
