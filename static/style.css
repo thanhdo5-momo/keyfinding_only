@@ -1,3 +1,10 @@
+:root {
+    --primary: #F95396;
+    --primary-strong: #e04685;
+    --secondary: #FF9DBE;
+    --accent: #FEC8DC;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +13,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     padding: 20px;
     min-height: 100vh;
 }
@@ -43,7 +50,7 @@ h1 {
 .filter-button {
     padding: 10px 20px;
     background: white;
-    border: 2px solid #667eea;
+    border: 2px solid var(--primary);
     border-radius: 6px;
     cursor: pointer;
     display: flex;
@@ -57,11 +64,11 @@ h1 {
 
 .filter-button:hover {
     background: #f8f9fa;
-    border-color: #5568d3;
+    border-color: var(--primary-strong);
 }
 
 .filter-arrow {
-    color: #667eea;
+    color: var(--primary);
     font-size: 0.8em;
 }
 
@@ -71,7 +78,7 @@ h1 {
     left: 135px;
     margin-top: 5px;
     background: white;
-    border: 2px solid #667eea;
+    border: 2px solid var(--primary);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
@@ -96,7 +103,7 @@ h1 {
 
 .filter-search input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--primary);
 }
 
 .filter-actions {
@@ -154,7 +161,7 @@ h1 {
 .apply-btn {
     width: 100%;
     padding: 10px;
-    background: #667eea;
+    background: var(--primary);
     color: white;
     border: none;
     border-radius: 6px;
@@ -165,7 +172,7 @@ h1 {
 }
 
 .apply-btn:hover {
-    background: #5568d3;
+    background: var(--primary-strong);
 }
 
 .pivot-table-container {
@@ -186,22 +193,22 @@ h1 {
 }
 
 .action-header {
-    background: #667eea;
+    background: var(--primary);
     color: white;
     padding: 15px;
     text-align: left;
     font-weight: 600;
-    border: 2px solid #5568d3;
+    border: 2px solid var(--primary-strong);
     min-width: 200px;
 }
 
 .phase-header {
-    background: #764ba2;
+    background: var(--secondary);
     color: white;
     padding: 15px;
     text-align: center;
     font-weight: 600;
-    border: 2px solid #6a4291;
+    border: 2px solid var(--primary-strong);
     min-width: 250px;
 }
 
@@ -227,15 +234,15 @@ h1 {
     align-items: center;
     padding: 8px 12px;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
     border-radius: 6px;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid var(--primary);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .issue-item:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     transform: translateX(3px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -243,7 +250,7 @@ h1 {
 
 .issue-item:hover .issue-badge {
     background: white;
-    color: #667eea;
+    color: var(--primary);
 }
 
 .issue-text {
@@ -252,7 +259,7 @@ h1 {
 }
 
 .issue-badge {
-    background: #667eea;
+    background: var(--primary);
     color: white;
     padding: 4px 10px;
     border-radius: 12px;
