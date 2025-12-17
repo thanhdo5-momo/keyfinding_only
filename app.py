@@ -27,13 +27,24 @@ def get_dataframe():
             )
     return _df_cache
 
-def load_issue_data(selected_users=None):
+def load_issue_data(selected_users=None, selected_campaign_types=None, selected_segments=None):
     # Use relative path from dashboard folder to workspace data
     df = get_dataframe().copy()
+
+    # Normalize NaN/NA so JSON stays valid
+    df = df.where(pd.notnull(df), None)
 
     # Filter by selected users if provided and not empty
     if selected_users and len(selected_users) > 0:
         df = df[df['User'].isin(selected_users)]
+
+    # Filter by selected campaign types if provided and not empty
+    if selected_campaign_types and len(selected_campaign_types) > 0:
+        df = df[df['Type'].isin(selected_campaign_types)]
+
+    # Filter by selected user segments if provided and not empty
+    if selected_segments and len(selected_segments) > 0:
+        df = df[df['User Segment'].isin(selected_segments)]
 
     # Clean issue name (remove code prefix)
     def clean_issue_name(issue):
@@ -62,6 +73,15 @@ def load_issue_data(selected_users=None):
 
     # Get all unique users for filter
     all_users = sorted(df['User'].dropna().unique().tolist())
+    all_users.remove('User') if 'User' in all_users else None
+
+    # Get all unique campaign types for filter
+    all_campaign_types = sorted(df['Type'].dropna().unique().tolist())
+    all_campaign_types.remove('Type') if 'Type' in all_campaign_types else None
+
+    # Get all unique user segments for filter
+    all_segments = sorted(df['User Segment'].dropna().unique().tolist())
+    all_segments.remove('User Segment') if 'User Segment' in all_segments else None
 
     # Get all unique actions
     all_actions = sorted(df['Action_Clean'].unique())
@@ -104,32 +124,64 @@ def load_issue_data(selected_users=None):
             "action_confidence": row.get('action_1_conf', ''),
             "issue_confidence": row.get('Confidence_Score', ''),
             "campaign_type": row.get('Type', ''),
+            "user_segment": row.get('User Segment', ''),
             "reference": row.get('Reference', '')
         })
 
-    return pivot_data, phase_order, all_actions, all_users, detail_map
+    return (
+        pivot_data,
+        phase_order,
+        all_actions,
+        all_users,
+        all_campaign_types,
+        all_segments,
+        detail_map
+    )
 
 @app.route('/')
 def index():
-    pivot_data, phase_order, all_actions, all_users, detail_map = load_issue_data()
+    (
+        pivot_data,
+        phase_order,
+        all_actions,
+        all_users,
+        all_campaign_types,
+        all_segments,
+        detail_map
+    ) = load_issue_data()
     return render_template('index.html',
                          pivot_data=pivot_data,
                          phase_order=phase_order,
                          all_actions=all_actions,
                          all_users=all_users,
+                         all_campaign_types=all_campaign_types,
+                         all_segments=all_segments,
                          detail_map=detail_map)
 
 @app.route('/api/filter', methods=['POST'])
 def filter_data():
     data = request.get_json()
     selected_users = data.get('users', [])
+    selected_campaign_types = data.get('campaign_types', [])
+    selected_segments = data.get('segments', [])
 
-    pivot_data, phase_order, all_actions, _, detail_map = load_issue_data(selected_users)
+    (
+        pivot_data,
+        phase_order,
+        all_actions,
+        all_users,
+        all_campaign_types,
+        all_segments,
+        detail_map
+    ) = load_issue_data(selected_users, selected_campaign_types, selected_segments)
 
     return jsonify({
         'pivot_data': pivot_data,
         'phase_order': phase_order,
         'all_actions': all_actions,
+        'all_users': all_users,
+        'all_campaign_types': all_campaign_types,
+        'all_segments': all_segments,
         'detail_map': detail_map
     })
 

@@ -34,8 +34,14 @@ h1 {
   font-size: 2.5em;
 }
 
-.filter-container {
+.filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
   margin-bottom: 25px;
+}
+
+.filter-container {
   position: relative;
   display: flex;
   align-items: center;
