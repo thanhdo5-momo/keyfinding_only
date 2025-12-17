@@ -14,75 +14,37 @@
 
       <!-- User Filter -->
       <div class="filter-container">
-        <div class="filter-group">
-          <label for="user-filter-btn" class="filter-label">Filter by User:</label>
-          <button id="user-filter-btn" class="filter-button">
-            <span id="selected-count">All Users</span>
-            <span class="filter-arrow">▼</span>
-          </button>
+        <label for="user-filter-btn" class="filter-label">Filter by:</label>
+        <button id="user-filter-btn" class="filter-button">
+          <span id="selected-count">All Users</span>
+          <span class="filter-arrow">▼</span>
+        </button>
 
-          <div
-            id="user-filter-dropdown"
-            class="filter-dropdown"
-            style="display: none">
-            <div class="filter-search">
-              <input type="text" id="user-search" placeholder="Search users..." />
-            </div>
-            <div class="filter-actions">
-              <button id="select-all-btn" class="action-btn">Select All</button>
-              <button id="clear-all-btn" class="action-btn">Clear All</button>
-            </div>
-            <div class="filter-options" id="user-options">
-              {% for user in all_users %}
-              <label class="filter-option">
-                <input
-                  type="checkbox"
-                  class="user-checkbox"
-                  value="{{ user }}"
-                  checked />
-                <span>{{ user }}</span>
-              </label>
-              {% endfor %}
-            </div>
-            <div class="filter-footer">
-              <button id="apply-filter-btn" class="apply-btn">Apply</button>
-            </div>
+        <div
+          id="user-filter-dropdown"
+          class="filter-dropdown"
+          style="display: none">
+          <div class="filter-search">
+            <input type="text" id="user-search" placeholder="Search users..." />
           </div>
-        </div>
-
-        <div class="filter-group">
-          <label for="campaign-filter-btn" class="filter-label">Campaign Type:</label>
-          <button id="campaign-filter-btn" class="filter-button">
-            <span id="campaign-selected-count">All Campaigns</span>
-            <span class="filter-arrow">▼</span>
-          </button>
-
-          <div
-            id="campaign-filter-dropdown"
-            class="filter-dropdown"
-            style="display: none">
-            <div class="filter-search">
-              <input type="text" id="campaign-search" placeholder="Search campaigns..." />
-            </div>
-            <div class="filter-actions">
-              <button id="campaign-select-all-btn" class="action-btn">Select All</button>
-              <button id="campaign-clear-all-btn" class="action-btn">Clear All</button>
-            </div>
-            <div class="filter-options" id="campaign-options">
-              {% for campaign in all_campaign_types %}
-              <label class="filter-option">
-                <input
-                  type="checkbox"
-                  class="campaign-checkbox"
-                  value="{{ campaign }}"
-                  checked />
-                <span>{{ campaign }}</span>
-              </label>
-              {% endfor %}
-            </div>
-            <div class="filter-footer">
-              <button id="campaign-apply-filter-btn" class="apply-btn">Apply</button>
-            </div>
+          <div class="filter-actions">
+            <button id="select-all-btn" class="action-btn">Select All</button>
+            <button id="clear-all-btn" class="action-btn">Clear All</button>
+          </div>
+          <div class="filter-options" id="user-options">
+            {% for user in all_users %}
+            <label class="filter-option">
+              <input
+                type="checkbox"
+                class="user-checkbox"
+                value="{{ user }}"
+                checked />
+              <span>{{ user }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="filter-footer">
+            <button id="apply-filter-btn" class="apply-btn">Apply</button>
           </div>
         </div>
       </div>
@@ -133,12 +95,12 @@
             <thead>
               <tr>
                 <th>Finding</th>
+                <th>Campaign Type</th>
                 <th>User</th>
                 <th>Phase</th>
                 <th>Issue Explanation</th>
                 <th>Action Explanation</th>
                 <th>Action Confidence</th>
-                <th>Campaign Type</th>
                 <th>Reference</th>
               </tr>
             </thead>
@@ -155,70 +117,40 @@
       let pivotData = {{ pivot_data|tojson }};
       let phaseOrder = {{ phase_order|tojson }};
       let allActions = {{ all_actions|tojson }};
-      let allUsersList = {{ all_users|tojson }};
-      let allCampaignTypesList = {{ all_campaign_types|tojson }};
-      let selectedUsers = new Set(allUsersList);
-      let selectedCampaignTypes = new Set(allCampaignTypesList);
+      let selectedUsers = new Set({{ all_users|tojson }});
 
-      function toggleDropdown(buttonId, dropdownId) {
-          const dropdown = document.getElementById(dropdownId);
-          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-          document.getElementById(buttonId).classList.toggle('active');
-      }
-
-      function closeDropdown(dropdownId, buttonId) {
-          const dropdown = document.getElementById(dropdownId);
-          dropdown.style.display = 'none';
-          document.getElementById(buttonId).classList.remove('active');
-      }
-
+      // Filter dropdown toggle
       document.getElementById('user-filter-btn').addEventListener('click', function(e) {
           e.stopPropagation();
-          toggleDropdown('user-filter-btn', 'user-filter-dropdown');
+          const dropdown = document.getElementById('user-filter-dropdown');
+          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
       });
 
-      document.getElementById('campaign-filter-btn').addEventListener('click', function(e) {
-          e.stopPropagation();
-          toggleDropdown('campaign-filter-btn', 'campaign-filter-dropdown');
-      });
-
-      // Close dropdowns when clicking outside
+      // Close dropdown when clicking outside
       document.addEventListener('click', function(e) {
-          [['user-filter-dropdown', 'user-filter-btn'], ['campaign-filter-dropdown', 'campaign-filter-btn']].forEach(ids => {
-              const [dropdownId, buttonId] = ids;
-              const dropdown = document.getElementById(dropdownId);
-              const button = document.getElementById(buttonId);
-              if (!dropdown.contains(e.target) && e.target !== button && !button.contains(e.target)) {
-                  closeDropdown(dropdownId, buttonId);
-              }
-          });
+          const dropdown = document.getElementById('user-filter-dropdown');
+          const button = document.getElementById('user-filter-btn');
+          if (!dropdown.contains(e.target) && e.target !== button) {
+              dropdown.style.display = 'none';
+          }
       });
 
       // Prevent dropdown close when clicking inside
-      ['user-filter-dropdown', 'campaign-filter-dropdown'].forEach(id => {
-          document.getElementById(id).addEventListener('click', function(e) {
-              e.stopPropagation();
-          });
+      document.getElementById('user-filter-dropdown').addEventListener('click', function(e) {
+          e.stopPropagation();
       });
 
       // Search functionality
       document.getElementById('user-search').addEventListener('input', function(e) {
           const searchTerm = e.target.value.toLowerCase();
-          document.querySelectorAll('#user-options .filter-option').forEach(option => {
+          const options = document.querySelectorAll('.filter-option');
+          options.forEach(option => {
               const text = option.textContent.toLowerCase();
               option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
           });
       });
 
-      document.getElementById('campaign-search').addEventListener('input', function(e) {
-          const searchTerm = e.target.value.toLowerCase();
-          document.querySelectorAll('#campaign-options .filter-option').forEach(option => {
-              const text = option.textContent.toLowerCase();
-              option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
-          });
-      });
-
-      // Select All / Clear All for users
+      // Select All
       document.getElementById('select-all-btn').addEventListener('click', function() {
           document.querySelectorAll('.user-checkbox').forEach(cb => {
               if (cb.parentElement.style.display !== 'none') {
@@ -227,6 +159,7 @@
           });
       });
 
+      // Clear All
       document.getElementById('clear-all-btn').addEventListener('click', function() {
           document.querySelectorAll('.user-checkbox').forEach(cb => {
               if (cb.parentElement.style.display !== 'none') {
@@ -235,70 +168,30 @@
           });
       });
 
-      // Select All / Clear All for campaigns
-      document.getElementById('campaign-select-all-btn').addEventListener('click', function() {
-          document.querySelectorAll('.campaign-checkbox').forEach(cb => {
-              if (cb.parentElement.style.display !== 'none') {
-                  cb.checked = true;
-              }
-          });
-      });
-
-      document.getElementById('campaign-clear-all-btn').addEventListener('click', function() {
-          document.querySelectorAll('.campaign-checkbox').forEach(cb => {
-              if (cb.parentElement.style.display !== 'none') {
-                  cb.checked = false;
-              }
-          });
-      });
-
-      // Apply Filters
-      function applyUserSelection() {
+      // Apply Filter
+      document.getElementById('apply-filter-btn').addEventListener('click', function() {
           selectedUsers.clear();
           document.querySelectorAll('.user-checkbox:checked').forEach(cb => {
               selectedUsers.add(cb.value);
           });
-          updateUserSelectedCount();
-          closeDropdown('user-filter-dropdown', 'user-filter-btn');
+          updateSelectedCount();
           applyFilter();
-      }
+          document.getElementById('user-filter-dropdown').style.display = 'none';
+      });
 
-      function applyCampaignSelection() {
-          selectedCampaignTypes.clear();
-          document.querySelectorAll('.campaign-checkbox:checked').forEach(cb => {
-              selectedCampaignTypes.add(cb.value);
-          });
-          updateCampaignSelectedCount();
-          closeDropdown('campaign-filter-dropdown', 'campaign-filter-btn');
-          applyFilter();
-      }
-
-      document.getElementById('apply-filter-btn').addEventListener('click', applyUserSelection);
-      document.getElementById('campaign-apply-filter-btn').addEventListener('click', applyCampaignSelection);
-
-      function updateUserSelectedCount() {
+      function updateSelectedCount() {
           const count = selectedUsers.size;
-          const total = allUsersList.length;
+          const total = {{ all_users|length }};
           const label = count === total ? 'All Users' : `${count} of ${total} selected`;
           document.getElementById('selected-count').textContent = label;
       }
 
-      function updateCampaignSelectedCount() {
-          const count = selectedCampaignTypes.size;
-          const total = allCampaignTypesList.length;
-          const label = count === total ? 'All Campaigns' : `${count} of ${total} selected`;
-          document.getElementById('campaign-selected-count').textContent = label;
-      }
-
-      updateUserSelectedCount();
-      updateCampaignSelectedCount();
-
       async function applyFilter() {
           const users = Array.from(selectedUsers);
-          const campaigns = Array.from(selectedCampaignTypes);
-          // If all are selected, pass empty array to show all data
+          const allUsersList = {{ all_users|tojson }};
+
+          // If all users are selected, pass empty array to show all data
           const usersToSend = users.length === allUsersList.length ? [] : users;
-          const campaignsToSend = campaigns.length === allCampaignTypesList.length ? [] : campaigns;
 
           try {
               const response = await fetch('/api/filter', {
@@ -306,10 +199,7 @@
                   headers: {
                       'Content-Type': 'application/json',
                   },
-                  body: JSON.stringify({
-                      users: usersToSend,
-                      campaign_types: campaignsToSend
-                  })
+                  body: JSON.stringify({ users: usersToSend })
               });
 
               const data = await response.json();
@@ -384,10 +274,6 @@
           if (selectedUsers.size > 0) {
               details = details.filter(obj => selectedUsers.has(obj.user));
           }
-          // Filter by selected campaign types if available in detail map
-          if (selectedCampaignTypes.size > 0) {
-              details = details.filter(obj => selectedCampaignTypes.has(obj.campaign_type));
-          }
 
           document.getElementById('modal-issue-title').innerText = action + ' → ' + issue;
           const tbody = document.getElementById('modal-finding-table').querySelector('tbody');
@@ -398,6 +284,9 @@
 
               const tdFinding = document.createElement('td');
               tdFinding.innerText = obj.finding || '';
+
+              const tdCampaignType = document.createElement('td');
+              tdCampaignType.innerText = obj.campaign_type || '';
 
               const tdUser = document.createElement('td');
               tdUser.innerText = obj.user || '';
@@ -413,9 +302,6 @@
 
               const tdConfidence = document.createElement('td');
               tdConfidence.innerText = obj.action_confidence || '';
-
-              const tdCampaign = document.createElement('td');
-              tdCampaign.innerText = obj.campaign_type || '';
 
               const tdReference = document.createElement('td');
               const ref = obj.reference || '';
@@ -442,12 +328,12 @@
               }
 
               tr.appendChild(tdFinding);
+              tr.appendChild(tdCampaignType);
               tr.appendChild(tdUser);
               tr.appendChild(tdPhase);
               tr.appendChild(tdIssueExplanation);
               tr.appendChild(tdActionExplanation);
               tr.appendChild(tdConfidence);
-              tr.appendChild(tdCampaign);
               tr.appendChild(tdReference);
               tbody.appendChild(tr);
           });
