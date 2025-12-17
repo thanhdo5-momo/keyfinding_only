@@ -13,8 +13,8 @@ def get_dataframe():
         base_dir = os.path.dirname(os.path.abspath(__file__))
         # Try common locations relative to this file; useful if run from different CWDs
         candidate_paths = [
-            os.path.join(base_dir, "output_classified_split_with_actions.xlsx"),
-            os.path.join(os.path.dirname(base_dir), "output_classified_split_with_actions.xlsx"),
+            os.path.join(base_dir, "raw.xlsx"),
+            os.path.join(os.path.dirname(base_dir), "raw.xlsx"),
         ]
 
         for file_path in candidate_paths:
@@ -23,17 +23,21 @@ def get_dataframe():
                 break
         else:
             raise FileNotFoundError(
-                f"output_classified_split_with_actions.xlsx not found. Tried: {candidate_paths}"
+                f"raw.xlsx not found. Tried: {candidate_paths}"
             )
     return _df_cache
 
-def load_issue_data(selected_users=None):
+def load_issue_data(selected_users=None, selected_campaign_types=None):
     # Use relative path from dashboard folder to workspace data
     df = get_dataframe().copy()
 
     # Filter by selected users if provided and not empty
     if selected_users and len(selected_users) > 0:
         df = df[df['User'].isin(selected_users)]
+
+    # Filter by campaign type if provided and column exists
+    if selected_campaign_types and len(selected_campaign_types) > 0:
+        df = df[df['Campaign type'].isin(selected_campaign_types)]
 
     # Clean issue name (remove code prefix)
     def clean_issue_name(issue):
@@ -62,6 +66,9 @@ def load_issue_data(selected_users=None):
 
     # Get all unique users for filter
     all_users = sorted(df['User'].dropna().unique().tolist())
+
+    # Get all unique campaign types if available
+    all_campaign_types = sorted(df['Campaign type'].dropna().unique().tolist())
 
     # Get all unique actions
     all_actions = sorted(df['Action_Clean'].unique())
@@ -102,32 +109,51 @@ def load_issue_data(selected_users=None):
             "issue_explanation": row.get('Issue_Explanation', ''),
             "action_explanation": row.get('action_1_explanation', ''),
             "action_confidence": row.get('action_1_conf', ''),
-            "issue_confidence": row.get('Confidence_Score', '')
+            "issue_confidence": row.get('Confidence_Score', ''),
+            "campaign_type": row.get('Campaign type', ''),
+            "reference": row.get('Reference', '')
         })
 
-    return pivot_data, phase_order, all_actions, all_users, detail_map
+    return pivot_data, phase_order, all_actions, all_users, all_campaign_types, detail_map
 
 @app.route('/')
 def index():
-    pivot_data, phase_order, all_actions, all_users, detail_map = load_issue_data()
+    (
+        pivot_data,
+        phase_order,
+        all_actions,
+        all_users,
+        all_campaign_types,
+        detail_map
+    ) = load_issue_data()
     return render_template('index.html',
                          pivot_data=pivot_data,
                          phase_order=phase_order,
                          all_actions=all_actions,
                          all_users=all_users,
+                         all_campaign_types=all_campaign_types,
                          detail_map=detail_map)
 
 @app.route('/api/filter', methods=['POST'])
 def filter_data():
     data = request.get_json()
     selected_users = data.get('users', [])
+    selected_campaign_types = data.get('campaign_types', [])
 
-    pivot_data, phase_order, all_actions, _, detail_map = load_issue_data(selected_users)
+    (
+        pivot_data,
+        phase_order,
+        all_actions,
+        _,
+        all_campaign_types,
+        detail_map
+    ) = load_issue_data(selected_users, selected_campaign_types)
 
     return jsonify({
         'pivot_data': pivot_data,
         'phase_order': phase_order,
         'all_actions': all_actions,
+        'all_campaign_types': all_campaign_types,
         'detail_map': detail_map
     })
 
